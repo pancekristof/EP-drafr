@@ -4,7 +4,8 @@ import { STATIONS, PATIENT_STATUS } from '../constants';
 import { firebaseService } from '../services/firebase';
 
 const AdminDashboard = ({ patients, calledPatients }) => {
-  const [selectedStation, setSelectedStation] = useState('urology');
+  // Use first station from STATIONS array as default
+  const [selectedStation, setSelectedStation] = useState(STATIONS[0].id);
   
   const patientsArray = Object.entries(patients).map(([id, data]) => ({ id, ...data }));
   const calledArray = Object.entries(calledPatients).map(([id, data]) => ({ id, ...data }));
@@ -81,7 +82,7 @@ const AdminDashboard = ({ patients, calledPatients }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
@@ -95,7 +96,8 @@ const AdminDashboard = ({ patients, calledPatients }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Updated grid for 10 stations */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-8 max-h-96 overflow-y-auto">
             {STATIONS.map(station => {
               const Icon = station.icon;
               const count = patientsArray.filter(p => p.station === station.id && p.status === PATIENT_STATUS.WAITING).length;
@@ -103,21 +105,19 @@ const AdminDashboard = ({ patients, calledPatients }) => {
                 <button
                   key={station.id}
                   onClick={() => setSelectedStation(station.id)}
-                  className={`p-6 rounded-xl border-2 transition-all duration-200 ${
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                     selectedStation === station.id
-                      ? 'border-indigo-500 bg-indigo-50'
+                      ? 'border-indigo-500 bg-indigo-50 shadow-lg'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`${station.color} rounded-full p-3`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="font-medium text-gray-800">{station.name}</span>
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className={`${station.color} rounded-full p-2`}>
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <div className="bg-gray-100 rounded-full px-3 py-1">
-                      <span className="text-sm font-medium text-gray-600">{count} várakozik</span>
+                    <span className="font-medium text-gray-800 text-sm text-center">{station.name}</span>
+                    <div className="bg-gray-100 rounded-full px-2 py-1">
+                      <span className="text-xs font-medium text-gray-600">{count} várakozik</span>
                     </div>
                   </div>
                 </button>
@@ -138,7 +138,7 @@ const AdminDashboard = ({ patients, calledPatients }) => {
                   <p>Nincs várakozó beteg</p>
                 </div>
               ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-4 max-h-96 overflow-y-auto">
                   {waitingPatients.map(patient => (
                     <div key={`waiting-${patient.id}`} className="bg-white p-4 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between">
@@ -188,7 +188,7 @@ const AdminDashboard = ({ patients, calledPatients }) => {
                   <p>Nincs behívott beteg</p>
                 </div>
               ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-4 max-h-96 overflow-y-auto">
                   {calledStationPatients.map(patient => {
                     return (
                       <div key={`called-${patient.id}`} className="bg-white p-4 rounded-lg border-2 border-yellow-300">

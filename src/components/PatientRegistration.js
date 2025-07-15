@@ -38,7 +38,7 @@ const PatientRegistration = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <div className="bg-blue-500 rounded-full p-4 w-20 h-20 mx-auto mb-4">
@@ -67,7 +67,8 @@ const PatientRegistration = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Válasszon Szűrőállomást
               </label>
-              <div className="grid gap-3">
+              {/* Scrollable grid for 10 stations */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2">
                 {STATIONS.map(station => {
                   const Icon = station.icon;
                   return (
@@ -77,15 +78,15 @@ const PatientRegistration = () => {
                       disabled={isSubmitting}
                       className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                         selectedStation === station.id
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-blue-500 bg-blue-50 shadow-lg'
                           : 'border-gray-200 hover:border-gray-300'
-                      } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className={`${station.color} rounded-full p-2`}>
+                        <div className={`${station.color} rounded-full p-2 flex-shrink-0`}>
                           <Icon className="w-5 h-5 text-white" />
                         </div>
-                        <span className="font-medium text-gray-800">{station.name}</span>
+                        <span className="font-medium text-gray-800 text-left">{station.name}</span>
                       </div>
                     </button>
                   );
@@ -93,25 +94,27 @@ const PatientRegistration = () => {
               </div>
             </div>
 
-            <button
-              onClick={handleRegister}
-              disabled={isSubmitting}
-              className={`w-full py-3 rounded-lg font-medium transition-colors duration-200 ${
-                isSubmitting
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
-              }`}
-            >
-              {isSubmitting ? 'Regisztrálás...' : 'Regisztráció'}
-            </button>
-
             {message && (
-              <div className={`p-4 rounded-lg ${
-                message.includes('Sikeres') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              <div className={`p-4 rounded-lg text-center ${
+                message.includes('Sikeres') 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
               }`}>
                 {message}
               </div>
             )}
+
+            <button
+              onClick={handleRegister}
+              disabled={isSubmitting || !serialNumber || !selectedStation}
+              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors duration-200 ${
+                isSubmitting || !serialNumber || !selectedStation
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              {isSubmitting ? 'Regisztráció folyamatban...' : 'Regisztráció'}
+            </button>
           </div>
         </div>
       </div>

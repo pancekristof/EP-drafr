@@ -1,23 +1,65 @@
-import { Heart, Eye, Stethoscope } from 'lucide-react';
+import { Activity, Heart, Eye, Stethoscope, Brain, ClipboardCheck, Dumbbell, Users, HelpCircle, Palette } from 'lucide-react';
 
 export const STATIONS = [
   { 
-    id: 'urology', 
-    name: 'Urológia', 
-    icon: Heart, 
+    id: 'inbody', 
+    name: 'Inbody állomás', 
+    icon: Activity, 
     color: 'bg-blue-500' 
   },
   { 
-    id: 'eye', 
-    name: 'Szemészet', 
-    icon: Eye, 
+    id: 'red', 
+    name: 'Piros állomás', 
+    icon: Heart, 
+    color: 'bg-red-500' 
+  },
+  { 
+    id: 'white', 
+    name: 'Fehér állomás', 
+    icon: ClipboardCheck, 
+    color: 'bg-gray-400' 
+  },
+  { 
+    id: 'green', 
+    name: 'Zöld állomás', 
+    icon: Palette, 
     color: 'bg-green-500' 
   },
   { 
-    id: 'skincare', 
+    id: 'dietetics', 
+    name: 'Dietetika', 
+    icon: ClipboardCheck, 
+    color: 'bg-orange-500' 
+  },
+  { 
+    id: 'assessment', 
+    name: 'Állapotfelmérés', 
+    icon: Brain, 
+    color: 'bg-purple-500' 
+  },
+  { 
+    id: 'movement', 
+    name: 'Mozgás tanácsadás', 
+    icon: Dumbbell, 
+    color: 'bg-indigo-500' 
+  },
+  { 
+    id: 'physiotherapy', 
+    name: 'Gyógytorna', 
+    icon: Users, 
+    color: 'bg-teal-500' 
+  },
+  { 
+    id: 'dentistry', 
+    name: 'Fogászat', 
+    icon: HelpCircle, 
+    color: 'bg-cyan-500' 
+  },
+  { 
+    id: 'dermatology', 
     name: 'Bőrgyógyászat', 
     icon: Stethoscope, 
-    color: 'bg-purple-500' 
+    color: 'bg-pink-500' 
   }
 ];
 

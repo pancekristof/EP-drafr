@@ -1,7 +1,55 @@
 import { ref, push, update, remove, onValue, off } from 'firebase/database';
-import { database } from '../config/firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { database, auth } from '../config/firebase';
 import { PATIENT_STATUS } from '../constants';
 
+// Authentication service
+export const authService = {
+  // Sign in with email and password
+  signIn: async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return { success: true, user: userCredential.user };
+    } catch (error) {
+      console.error('Sign in error:', error);
+      // Magyar hibaüzenetek
+      let errorMessage = 'Sikertelen bejelentkezés';
+      if (error.code === 'auth/user-not-found') {
+        errorMessage = 'Nem található ilyen felhasználó';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Hibás jelszó';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Érvénytelen email cím';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Túl sok sikertelen próbálkozás. Próbálja újra később!';
+      }
+      return { success: false, error: errorMessage };
+    }
+  },
+
+  // Sign out
+  signOut: async () => {
+    try {
+      await signOut(auth);
+      return { success: true };
+    } catch (error) {
+      console.error('Sign out error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get current user
+  getCurrentUser: () => {
+    return auth.currentUser;
+  },
+
+  // Subscribe to auth state changes
+  onAuthStateChange: (callback) => {
+    return onAuthStateChanged(auth, callback);
+  }
+};
+
+// Original firebase service
 export const firebaseService = {
   // Add a new patient to the queue
   addPatient: async (patientData) => {

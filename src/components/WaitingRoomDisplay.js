@@ -20,8 +20,8 @@ const WaitingRoomDisplay = ({ calledPatients }) => {
             <div className="bg-green-500 rounded-full p-3 w-16 h-16 mx-auto mb-3">
               <Monitor className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Most Hívjuk</h1>
-            <p className="text-xl text-gray-600">Kérjük ellenőrizze az állomását alább</p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Ha látja a sorszámát fáradjon a megfelelő állomáshoz!</h1>
+            
           </div>
 
           {/* Updated grid for 10 stations */}

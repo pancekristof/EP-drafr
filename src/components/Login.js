@@ -33,7 +33,7 @@ const Login = ({ onLogin }) => {
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
               <Lock className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">Egészségügyi Kezelés</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Egészségpart</h1>
             <p className="text-gray-600 mt-2">Jelentkezzen be a folytatáshoz</p>
           </div>
 

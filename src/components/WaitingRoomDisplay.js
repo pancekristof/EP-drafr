@@ -1,192 +1,110 @@
-import React, { useState } from 'react';
-import { Settings, Clock, AlertCircle, Users } from 'lucide-react';
-import { STATIONS, PATIENT_STATUS } from '../constants';
-import { firebaseService } from '../services/firebase';
+import React from 'react';
+import { Monitor, Clock, AlertCircle } from 'lucide-react';
+import { STATIONS } from '../constants';
 
-const AdminDashboard = ({ patients, calledPatients }) => {
-  const [selectedStation, setSelectedStation] = useState('urology');
-  
-  const patientsArray = Object.entries(patients).map(([id, data]) => ({ id, ...data }));
+const WaitingRoomDisplay = ({ calledPatients }) => {
   const calledArray = Object.entries(calledPatients).map(([id, data]) => ({ id, ...data }));
-  
-  const stationPatients = patientsArray.filter(p => p.station === selectedStation);
-  const waitingPatients = stationPatients.filter(p => p.status === PATIENT_STATUS.WAITING);
-  const calledStationPatients = calledArray.filter(p => p.station === selectedStation);
 
-  const callPatient = async (patientId, patientData) => {
-    try {
-      await firebaseService.updatePatientStatus(patientId, PATIENT_STATUS.CALLED);
-      await firebaseService.addCalledPatient({
-        ...patientData,
-        station: selectedStation
-      });
-    } catch (error) {
-      console.error('Error calling patient:', error);
-    }
-  };
-
-  const recallPatient = async (serialNumber, calledId) => {
-    try {
-      console.log('Recalling patient:', { serialNumber, calledId });
-      
-      // First remove from called patients list
-      await firebaseService.removeCalledPatient(calledId);
-      
-      // Find the original patient by serial number and station
-      const originalPatient = patientsArray.find(p => 
-        p.serialNumber === serialNumber && 
-        p.station === selectedStation
-      );
-      
-      // Then update patient status back to waiting
-      if (originalPatient) {
-        await firebaseService.updatePatientStatus(originalPatient.id, PATIENT_STATUS.WAITING);
-        console.log('Patient recalled successfully');
-      } else {
-        console.log('Original patient not found, but removed from called list');
-      }
-    } catch (error) {
-      console.error('Error recalling patient:', error);
-    }
+  const getCalledPatientsForStation = (stationId) => {
+    return calledArray
+      .filter(call => call.station === stationId)
+      .sort((a, b) => new Date(b.calledAt) - new Date(a.calledAt))
+      .slice(0, 4);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <div className="bg-indigo-500 rounded-full p-3">
-                <Settings className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">Admin Vezérlőpult</h1>
-                <p className="text-gray-600">Beteg sor kezelése és hívások</p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+          <div className="text-center mb-8">
+            <div className="bg-green-500 rounded-full p-3 w-16 h-16 mx-auto mb-3">
+              <Monitor className="w-10 h-10 text-white" />
             </div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Most Hívjuk</h1>
+            <p className="text-xl text-gray-600">Kérjük ellenőrizze az állomását alább</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {STATIONS.map(station => {
               const Icon = station.icon;
-              const count = patientsArray.filter(p => p.station === station.id && p.status === PATIENT_STATUS.WAITING).length;
+              const stationCalledPatients = getCalledPatientsForStation(station.id);
+              
               return (
-                <button
-                  key={station.id}
-                  onClick={() => setSelectedStation(station.id)}
-                  className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                    selectedStation === station.id
-                      ? 'border-indigo-500 bg-indigo-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`${station.color} rounded-full p-3`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="font-medium text-gray-800">{station.name}</span>
-                    </div>
-                    <div className="bg-gray-100 rounded-full px-3 py-1">
-                      <span className="text-sm font-medium text-gray-600">{count} várakozik</span>
-                    </div>
+                <div key={station.id} className="bg-white border-4 border-gray-200 rounded-2xl overflow-hidden shadow-lg min-h-[400px] flex flex-col">
+                  <div className={`${station.color} p-6 text-white text-center flex-shrink-0`}>
+                    <Icon className="w-16 h-16 mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold">{station.name}</h2>
                   </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Várakozó betegek */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                {STATIONS.find(s => s.id === selectedStation)?.name} - Várakozó Sor
-              </h3>
-              
-              {waitingPatients.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Clock className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Nincs várakozó beteg</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {waitingPatients.map(patient => (
-                    <div key={`waiting-${patient.id}`} className="bg-white p-4 rounded-lg border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="bg-blue-100 rounded-full p-2">
-                            <Users className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800">Sorszám: {patient.serialNumber}</p>
-                            <p className="text-sm text-gray-600">
-                              Regisztrálva: {new Date(patient.timestamp).toLocaleTimeString()}
-                            </p>
-                          </div>
+                  
+                  <div className="flex-1 p-6">
+                    {stationCalledPatients.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-lg text-gray-500">Nincs behívott beteg</p>
                         </div>
-                        <button
-                          onClick={() => callPatient(patient.id, patient)}
-                          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
-                        >
-                          Beteg Hívása
-                        </button>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Behívott betegek */}
-            <div className="bg-yellow-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                {STATIONS.find(s => s.id === selectedStation)?.name} - Behívott Betegek
-              </h3>
-              
-              {calledStationPatients.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Nincs behívott beteg</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {calledStationPatients.map(patient => {
-                    return (
-                      <div key={`called-${patient.id}`} className="bg-white p-4 rounded-lg border-2 border-yellow-300">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="bg-yellow-100 rounded-full p-2">
-                              <AlertCircle className="w-5 h-5 text-yellow-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-800">Sorszám: {patient.serialNumber}</p>
-                              <p className="text-sm text-gray-600">
-                                Behívva: {new Date(patient.calledAt).toLocaleTimeString()}
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-700 text-center mb-4">
+                          Hívott Betegek
+                        </h3>
+                        
+                        {stationCalledPatients.map((call, index) => (
+                          <div key={call.id} 
+                               className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                                 index === 0 
+                                   ? 'border-red-500 bg-red-50 animate-pulse shadow-lg' 
+                                   : 'border-gray-200 bg-gray-50'
+                               }`}>
+                            <div className="text-center">
+                              <div className="flex items-center justify-center space-x-2 mb-2">
+                                {index === 0 && (
+                                  <AlertCircle className="w-5 h-5 text-red-500" />
+                                )}
+                                <span className={`text-3xl font-bold ${
+                                  index === 0 ? 'text-red-600' : 'text-gray-800'
+                                }`}>
+                                  {call.serialNumber}
+                                </span>
+                                {index === 0 && (
+                                  <AlertCircle className="w-5 h-5 text-red-500" />
+                                )}
+                              </div>
+                              
+                              {index === 0 ? (
+                                <div className="bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-2">
+                                  JÖJJÖN BE MOST
+                                </div>
+                              ) : (
+                                <div className="bg-gray-400 text-white px-3 py-1 rounded-full text-xs font-medium mb-2">
+                                  BEFEJEZVE
+                                </div>
+                              )}
+                              
+                              <p className={`text-sm ${
+                                index === 0 ? 'text-red-600 font-medium' : 'text-gray-600'
+                              }`}>
+                                {new Date(call.calledAt).toLocaleTimeString()}
                               </p>
                             </div>
                           </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => {
-                                console.log('Recall clicked:', { 
-                                  serialNumber: patient.serialNumber,
-                                  calledId: patient.id,
-                                  station: selectedStation
-                                });
-                                recallPatient(patient.serialNumber, patient.id);
-                              }}
-                              className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors duration-200"
-                            >
-                              Visszavon
-                            </button>
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+              );
+            })}
+          </div>
+          
+          <div className="mt-8 text-center bg-blue-50 rounded-xl p-4">
+            <p className="text-lg text-blue-800 font-medium">
+              📍 Keresse meg a sorszámát a megfelelő állomás oszlopában
+            </p>
+            <p className="text-base text-blue-600 mt-1">
+              Amikor a száma megjelenik a "JÖJJÖN BE MOST" felirattal, menjen az adott állomásra
+            </p>
           </div>
         </div>
       </div>
@@ -194,4 +112,4 @@ const AdminDashboard = ({ patients, calledPatients }) => {
   );
 };
 
-export default AdminDashboard;
+export default WaitingRoomDisplay;

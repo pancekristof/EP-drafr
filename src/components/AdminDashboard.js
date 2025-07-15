@@ -11,37 +11,71 @@ const AdminDashboard = ({ patients, calledPatients }) => {
   
   const stationPatients = patientsArray.filter(p => p.station === selectedStation);
   const waitingPatients = stationPatients.filter(p => p.status === PATIENT_STATUS.WAITING);
-  const calledStationPatients = calledArray.filter(p => p.station === selectedStation);
+  
+  // Debug: Log all called patients to see their stations
+  console.log('All called patients:', calledArray);
+  console.log('Selected station:', selectedStation);
+  
+  // Fix: Only show called patients for the selected station
+  const calledStationPatients = calledArray.filter(p => {
+    console.log('Checking called patient:', p.serialNumber, 'station:', p.station, 'matches:', p.station === selectedStation);
+    return p.station === selectedStation;
+  });
 
   const callPatient = async (patientId, patientData) => {
     try {
+      console.log('Calling patient:', { patientId, patientData, selectedStation });
+      
       await firebaseService.updatePatientStatus(patientId, PATIENT_STATUS.CALLED);
       await firebaseService.addCalledPatient({
-        ...patientData,
-        station: selectedStation
+        serialNumber: patientData.serialNumber,
+        station: patientData.station, // Use the patient's original station
+        timestamp: patientData.timestamp
       });
+      
+      console.log('Patient called successfully');
     } catch (error) {
       console.error('Error calling patient:', error);
     }
   };
 
-  const recallPatient = async (patientId, calledId) => {
+  const recallPatient = async (serialNumber, calledId) => {
     try {
-      console.log('Recalling patient:', { patientId, calledId });
+      console.log('Recalling patient:', { serialNumber, calledId });
       
       // First remove from called patients list
-      if (calledId) {
-        await firebaseService.removeCalledPatient(calledId);
-      }
+      await firebaseService.removeCalledPatient(calledId);
       
-      // Then update patient status back to waiting (only if patient still exists)
-      if (patientId) {
-        await firebaseService.updatePatientStatus(patientId, PATIENT_STATUS.WAITING);
-      }
+      // Find the original patient by serial number and station
+      const originalPatient = patientsArray.find(p => 
+        p.serialNumber === serialNumber && 
+        p.station === selectedStation
+      );
       
-      console.log('Patient recalled successfully');
+      // Then update patient status back to waiting
+      if (originalPatient) {
+        await firebaseService.updatePatientStatus(originalPatient.id, PATIENT_STATUS.WAITING);
+        console.log('Patient recalled successfully');
+      } else {
+        console.log('Original patient not found, but removed from called list');
+      }
     } catch (error) {
       console.error('Error recalling patient:', error);
+    }
+  };
+
+  const clearAllCalledPatients = async () => {
+    try {
+      console.log('Clearing all called patients for station:', selectedStation);
+      const stationCalled = calledArray.filter(p => p.station === selectedStation);
+      
+      for (const patient of stationCalled) {
+        await firebaseService.removeCalledPatient(patient.id);
+      }
+      
+      console.log('Cleared all called patients');
+    } catch (error) {
+      console.error('Error clearing called patients:', error);
     }
   };
 
@@ -134,9 +168,19 @@ const AdminDashboard = ({ patients, calledPatients }) => {
 
             {/* Behívott betegek */}
             <div className="bg-yellow-50 rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                {STATIONS.find(s => s.id === selectedStation)?.name} - Behívott Betegek
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {STATIONS.find(s => s.id === selectedStation)?.name} - Behívott Betegek
+                </h3>
+                {calledStationPatients.length > 0 && (
+                  <button
+                    onClick={clearAllCalledPatients}
+                    className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  >
+                    Összes Törlése
+                  </button>
+                )}
+              </div>
               
               {calledStationPatients.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -146,11 +190,6 @@ const AdminDashboard = ({ patients, calledPatients }) => {
               ) : (
                 <div className="grid gap-4">
                   {calledStationPatients.map(patient => {
-                    const originalPatient = patientsArray.find(p => 
-                      p.serialNumber === patient.serialNumber && 
-                      p.station === patient.station
-                    );
-                    
                     return (
                       <div key={`called-${patient.id}`} className="bg-white p-4 rounded-lg border-2 border-yellow-300">
                         <div className="flex items-center justify-between">
@@ -169,18 +208,13 @@ const AdminDashboard = ({ patients, calledPatients }) => {
                             <button
                               onClick={() => {
                                 console.log('Recall clicked:', { 
-                                  originalPatient: originalPatient?.id, 
-                                  calledPatient: patient.id,
-                                  serialNumber: patient.serialNumber 
+                                  serialNumber: patient.serialNumber,
+                                  calledId: patient.id,
+                                  station: selectedStation
                                 });
-                                if (originalPatient?.id && patient.id) {
-                                  recallPatient(originalPatient.id, patient.id);
-                                } else {
-                                  console.error('Missing IDs for recall');
-                                }
+                                recallPatient(patient.serialNumber, patient.id);
                               }}
                               className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 transition-colors duration-200"
-                              disabled={!originalPatient}
                             >
                               Visszavon
                             </button>

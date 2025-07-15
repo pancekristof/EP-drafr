@@ -45,7 +45,7 @@ const PatientRegistration = () => {
               <Users className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-gray-800">Beteg Regisztráció</h1>
-            <p className="text-gray-600 mt-2">Adja meg adatait a sorba álláshoz</p>
+            <p className="text-gray-600 mt-2">Adja meg adatait, hogy felkerüljön a várólistára</p>
           </div>
 
           <div className="space-y-6">

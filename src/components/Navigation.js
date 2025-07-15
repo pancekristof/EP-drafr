@@ -14,7 +14,7 @@ const Navigation = ({ currentView, setCurrentView, userEmail, onLogout }) => {
             <div className="bg-blue-500 rounded-full p-2">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-gray-800">Egészségügyi Kezelés</h1>
+            <h1 className="text-xl font-bold text-gray-800">Egészségpart</h1>
           </div>
           
           <div className="flex items-center space-x-4">
